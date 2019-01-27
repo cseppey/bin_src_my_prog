@@ -4,7 +4,7 @@
 
 
 pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr)),
-                     thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL){
+                     thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL, hei_lay=NULL){
   
   ### prepare taxo ----
   taxon <- droplevels(taxo)
@@ -115,7 +115,14 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   ### graf ----
   # layout
   lcs <- length(selec_smp)
-  layout(matrix(c(1:lcs, rep(lcs+1,lcs)), ncol=2), width=c(1,(lct-1)*0.65), respect=T)
+  if(is.null(mat_lay)){
+    mat_lay <- matrix(c(1:lcs, rep(lcs+1,lcs)), ncol=2)  
+  }
+  if(is.null(wdt_lay)){
+    wdt_lay=c(1,(lct-1)*0.65)
+  }
+  
+  layout(mat_lay, width=wdt_lay, height=hei_lay, respect=T)
   
   par(mar=c(0.5,1,1,0.5), oma=c(1,0,1,0), xaxs='i', yaxs='i')
   for(i in col_sel){ # for each sample selection
@@ -199,7 +206,6 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     pal <- pal[apply(is.na(pal), 1, function(x) all(x) == F),]
   }
   
-  
   # x  coord
   xs <- rev(rev(seq(0,1,length.out=ncol(leg)+2)[-1])[-1])
     
@@ -213,6 +219,6 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   }
   
   ###
-  out <- agg
-  return(out)
+  
+  return(agg)
 }
