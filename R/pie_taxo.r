@@ -142,7 +142,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     title(main=names(agg)[i])
     if(box){
       box('plot')
-      box('digure',2)
+      box('figure',2)
     }
     
     # pie rayon
