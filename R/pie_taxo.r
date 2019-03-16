@@ -14,14 +14,14 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   
   # aggregate mr according to the samples groups and taxa
   css <- sapply(seq_along(selec_smp), function(x) {
-    if(ncol(mr_iv) > 1){
+    if(ncol(mr) > 1){
       colSums(mr[selec_smp[[x]],])
     } else {
-      sum(mr_iv[selec_smp[[x]],])
+      sum(mr[selec_smp[[x]],])
     }
   })
   css <- matrix(css, ncol=length(selec_smp))
-  dimnames(css) <- list(names(mr_iv), names(selec_smp))
+  dimnames(css) <- list(names(mr), names(selec_smp))
   
   agg <- aggregate(css, as.list(taxon[tax_lev]), sum)
 
