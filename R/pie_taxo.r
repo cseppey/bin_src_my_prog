@@ -4,7 +4,8 @@
 
 
 pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr)),
-                     thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL, hei_lay=NULL){
+                     thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL, hei_lay=NULL,
+                     box=F){
   
   ### prepare taxo ----
   taxon <- droplevels(taxo)
@@ -139,6 +140,10 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     # plot
     plot.new()
     title(main=names(agg)[i])
+    if(box){
+      box('plot')
+      box('digure',2)
+    }
     
     # pie rayon
     ray <- (1-max(strwidth(agg[[mct]]))*cex*2)/2-adj
