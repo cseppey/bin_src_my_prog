@@ -134,7 +134,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   
   layout(mat_lay, width=wdt_lay, height=hei_lay, respect=T)
   
-  par(mar=c(0.5,1,1,0.5), oma=c(1,0,1,0), xaxs='i', yaxs='i')
+  par(mar=c(0.5,1,2,0.5), oma=c(1,0,1,0), xaxs='i', yaxs='i')
   for(i in col_sel){ # for each sample selection
     
     # plot
@@ -234,5 +234,5 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   
   ###
   
-  return(agg)
+  return(list(agg=agg, lst_pal=lst_pal))
 }
