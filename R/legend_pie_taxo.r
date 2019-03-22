@@ -3,7 +3,7 @@
 #####
 
 
-pie_taxo <- function(pie_taxo, box=F){
+legend_pie_taxo <- function(pie_taxo, x, y, x_range=1, box=F, cex=1){
   
   agg <- pie_taxo$agg
   lst_pal <- pie_taxo$lst_pal
@@ -45,15 +45,13 @@ pie_taxo <- function(pie_taxo, box=F){
     pal <- pal[apply(is.na(pal), 1, function(x) all(x) == F),]
   }
   
-  # x  coord
-  xs <- rev(rev(seq(0,1,length.out=ncol(leg)+2)[-1])[-1])
+  # xs
+  xr05 <- 0.5*x_range
+  xs <- x+seq(-xr05, xr05, length.out=ncol(leg))
   
   # leg
-  par(mar=rep(0,4))
-  plot.new()
-  
   for(i in seq_along(leg)){
-    legend(xs[i], 0.5, leg[,i], xjust=0.5, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
-           title=names(leg)[i])
+    legend(xs[i], y, leg[,i], xjust=0.5, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
+           title=names(leg)[i], cex=cex)
   }
 }
