@@ -5,7 +5,7 @@
 
 pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr)),
                      thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL, hei_lay=NULL,
-                     box=F){
+                     box=F, show=T){
   
   ### prepare taxo ----
   taxon <- droplevels(taxo)
@@ -123,115 +123,117 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   #
   
   ### graf ----
-  # layout
-  lcs <- length(selec_smp)
-  if(is.null(mat_lay)){
-    mat_lay <- matrix(c(1:lcs, rep(lcs+1,lcs)), ncol=2)  
-  }
-  if(is.null(wdt_lay)){
-    wdt_lay=c(1,(lct-1)*0.65)
-  }
-  
-  layout(mat_lay, width=wdt_lay, height=hei_lay, respect=T)
-  
-  par(mar=c(0.5,1,2,0.5), oma=c(1,0,1,0), xaxs='i', yaxs='i')
-  for(i in col_sel){ # for each sample selection
+  if(show){
     
-    # plot
-    plot.new()
-    title(main=names(agg)[i])
-    if(box){
-      box('plot')
-      box('figure',2)
+    # layout
+    lcs <- length(selec_smp)
+    if(is.null(mat_lay)){
+      mat_lay <- matrix(c(1:lcs, rep(lcs+1,lcs)), ncol=2)  
+    }
+    if(is.null(wdt_lay)){
+      wdt_lay=c(1,(lct-1)*0.65)
     }
     
-    # pie rayon
-    ray <- (1-max(strwidth(agg[[mct]]))*cex*2)/2-adj
-    r <- ray
-    shift <- ray/lct
+    layout(mat_lay, width=wdt_lay, height=hei_lay, respect=T)
     
-    for(j in rev(col_tax[-1])){ # for each tax lev except the first
-      # get the sum of each taxon
-      tax <- unique(agg[,j])
-      pie <- NULL
-      for(k in tax){
-        pie <- c(pie, sum(agg[agg[,j] == k,i]))
+    par(mar=c(0.5,1,2,0.5), oma=c(1,0,1,0), xaxs='i', yaxs='i')
+    for(i in col_sel){ # for each sample selection
+      
+      # plot
+      plot.new()
+      title(main=names(agg)[i])
+      if(box){
+        box('plot')
+        box('figure',2)
       }
-      names(pie) <- tax
-      pal <- lst_pal[[j-1]]
-
-      # pie
-      floating.pie(0.5,0.5, pie, radius=r, col=lst_pal[[j-1]][pie != 0], border=NA)
-      r <- r-shift
-      if(j != 2){
-        draw.circle(0.5,0.5,r+shift/5, col='white', border=NA)
+      
+      # pie rayon
+      ray <- (1-max(strwidth(agg[[mct]]))*cex*2)/2-adj
+      r <- ray
+      shift <- ray/lct
+      
+      for(j in rev(col_tax[-1])){ # for each tax lev except the first
+        # get the sum of each taxon
+        tax <- unique(agg[,j])
+        pie <- NULL
+        for(k in tax){
+          pie <- c(pie, sum(agg[agg[,j] == k,i]))
+        }
+        names(pie) <- tax
+        pal <- lst_pal[[j-1]]
+  
+        # pie
+        floating.pie(0.5,0.5, pie, radius=r, col=lst_pal[[j-1]][pie != 0], border=NA)
+        r <- r-shift
+        if(j != 2){
+          draw.circle(0.5,0.5,r+shift/5, col='white', border=NA)
+        }
+        
+      }
+      
+      # rad line 1st tax lev
+      cs <- cumsum(pie/sum(pie))*2*pi
+      for(j in cs){draw.radial.line(0, ray, c(0.5,0.5), angle=j, lwd=0.5)}
+      
+      # last taxa
+      p <- agg[[i]]/sum(agg[[i]])
+      rad <- p*2*pi
+      cs <- cumsum(rad)
+      names(cs) <- agg[[mct]]
+      for(j in seq_along(cs)){
+        if(rad[j] != 0){
+          ang <- cs[j]-rad[j]/2
+          radialtext(names(cs)[j], c(0.5,0.5), start=ray+0.01, angle=ang, cex=cex)
+          radialtext(paste(round(p[j]*100, digit=1), '%'), c(0.5,0.5), middle=ray-ray/lct+shift/5*3, angle=ang, cex=cex*0.5)
+        }
       }
       
     }
     
-    # rad line 1st tax lev
-    cs <- cumsum(pie/sum(pie))*2*pi
-    for(j in cs){draw.radial.line(0, ray, c(0.5,0.5), angle=j, lwd=0.5)}
+    # legend and pal
+    leg <- agg[col_tax[-c(1,mct)]]
     
-    # last taxa
-    p <- agg[[i]]/sum(agg[[i]])
-    rad <- p*2*pi
-    cs <- cumsum(rad)
-    names(cs) <- agg[[mct]]
-    for(j in seq_along(cs)){
-      if(rad[j] != 0){
-        ang <- cs[j]-rad[j]/2
-        radialtext(names(cs)[j], c(0.5,0.5), start=ray+0.01, angle=ang, cex=cex)
-        radialtext(paste(round(p[j]*100, digit=1), '%'), c(0.5,0.5), middle=ray-ray/lct+shift/5*3, angle=ang, cex=cex*0.5)
+    pal <- as.matrix(leg)
+    for(i in 1:nrow(pal)){
+      for(j in 1:ncol(pal)){
+        pal[i,j] <- lst_pal[[j]][names(lst_pal[[j]]) == pal[i,j]]
+      }
+    }
+    pal <- as.data.frame(pal)
+    
+    for(i in seq_along(leg)){
+      prev <- leg[1,i]
+      for(j in seq_along(leg[,i])[-1]){
+        if(leg[j,i] == prev){
+          leg[j,i] <- NA
+          pal[j,i] <- NA
+        } else {
+          prev <- leg[j,i]
+        }
       }
     }
     
-  }
-  
-  # legend and pal
-  leg <- agg[col_tax[-c(1,mct)]]
-  
-  pal <- as.matrix(leg)
-  for(i in 1:nrow(pal)){
-    for(j in 1:ncol(pal)){
-      pal[i,j] <- lst_pal[[j]][names(lst_pal[[j]]) == pal[i,j]]
+    # remove empty taxa
+    if(ncol(leg) == 1){
+      leg <- na.omit(leg)
+      pal <- na.omit(pal)
+    } else {
+      leg <- leg[apply(is.na(leg), 1, function(x) all(x) == F),]
+      pal <- pal[apply(is.na(pal), 1, function(x) all(x) == F),]
     }
-  }
-  pal <- as.data.frame(pal)
-  
-  for(i in seq_along(leg)){
-    prev <- leg[1,i]
-    for(j in seq_along(leg[,i])[-1]){
-      if(leg[j,i] == prev){
-        leg[j,i] <- NA
-        pal[j,i] <- NA
-      } else {
-        prev <- leg[j,i]
-      }
-    }
-  }
-  
-  # remove empty taxa
-  if(ncol(leg) == 1){
-    leg <- na.omit(leg)
-    pal <- na.omit(pal)
-  } else {
-    leg <- leg[apply(is.na(leg), 1, function(x) all(x) == F),]
-    pal <- pal[apply(is.na(pal), 1, function(x) all(x) == F),]
-  }
-  
-  # x  coord
-  xs <- rev(rev(seq(0,1,length.out=ncol(leg)+2)[-1])[-1])
     
-  # leg
-  par(mar=rep(0,4))
-  plot.new()
-  
-  for(i in seq_along(leg)){
-    legend(xs[i], 0.5, leg[,i], xjust=0.5, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
-           title=names(leg)[i])
+    # x  coord
+    xs <- rev(rev(seq(0,1,length.out=ncol(leg)+2)[-1])[-1])
+      
+    # leg
+    par(mar=rep(0,4))
+    plot.new()
+    
+    for(i in seq_along(leg)){
+      legend(xs[i], 0.5, leg[,i], xjust=0.5, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
+             title=names(leg)[i])
+    }
   }
-  
   ###
   
   return(list(agg=agg, lst_pal=lst_pal))
