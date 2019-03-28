@@ -3,7 +3,7 @@
 #####
 
 
-pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr)),
+pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr)), selec_otu=NULL,
                      thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL, hei_lay=NULL,
                      box=F, show=T){
   
@@ -14,13 +14,24 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   }
   
   # aggregate mr according to the samples groups and taxa
-  css <- sapply(seq_along(selec_smp), function(x) {
-    if(ncol(mr) > 1){
-      colSums(mr[selec_smp[[x]],])
-    } else {
-      sum(mr[selec_smp[[x]],])
-    }
-  })
+  if(is.null(selec_otu)){
+    css <- sapply(seq_along(selec_smp), function(x) {
+      if(ncol(mr) > 1){
+        colSums(mr[selec_smp[[x]],])
+      } else {
+        sum(mr[selec_smp[[x]],])
+      }
+    })
+  } else {
+    css <- sapply(seq_along(selec_smp), function(x) {
+      if(ncol(mr) > 1){
+        cs <- colSums(mr[selec_smp[[x]],])
+        ifelse(names(cs) %in% selec_otu[[x]], cs, 0)
+      } else {
+        sum(mr[selec_smp[[x]],])
+      }
+    })
+  }
   css <- matrix(css, ncol=length(selec_smp))
   dimnames(css) <- list(names(mr), names(selec_smp))
   
