@@ -13,27 +13,35 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     taxon <- cbind.data.frame(life=factor(rep('life', nrow(taxon))), taxon)
   }
   
+  # perpare selec_smp
+  if(is.factor(selec_smp)){
+    sel_smp <- NULL
+    for(i in levels(selec_smp)){
+      sel_smp[[i]] <- which(selec_smp == i)
+    }
+  }
+  
   # aggregate mr according to the samples groups and taxa
   if(is.null(selec_otu)){
-    css <- sapply(seq_along(selec_smp), function(x) {
+    css <- sapply(seq_along(sel_smp), function(x) {
       if(ncol(mr) > 1){
-        colSums(mr[selec_smp[[x]],])
+        colSums(mr[sel_smp[[x]],])
       } else {
-        sum(mr[selec_smp[[x]],])
+        sum(mr[sel_smp[[x]],])
       }
     })
   } else {
-    css <- sapply(seq_along(selec_smp), function(x) {
+    css <- sapply(seq_along(sel_smp), function(x) {
       if(ncol(mr) > 1){
-        cs <- colSums(mr[selec_smp[[x]],])
+        cs <- colSums(mr[sel_smp[[x]],])
         ifelse(names(cs) %in% selec_otu[[x]], cs, 0)
       } else {
-        sum(mr[selec_smp[[x]],])
+        sum(mr[sel_smp[[x]],])
       }
     })
   }
-  css <- matrix(css, ncol=length(selec_smp))
-  dimnames(css) <- list(names(mr), names(selec_smp))
+  css <- matrix(css, ncol=length(sel_smp))
+  dimnames(css) <- list(names(mr), names(sel_smp))
   
   agg <- aggregate(css, as.list(taxon[tax_lev]), sum)
 
@@ -50,10 +58,13 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   
   for(i in rev(col_tax)[-1]){ # for all tax level but the last
     for(j in unique(agg[,i])){ # for all taxa in a given tax level 
+      # create leftover
+      leftov <- ifelse(grepl('_X',j), paste0(j, 'X'), paste0(j, '_X'))
+      
       # get the sub_tax indices
       ind_sub_tax <- which(agg[,i] == j)
       # get the taxon leftover 
-      ind_X <- which(agg[ind_sub_tax, i+1] == paste0(j, '_X') | agg[ind_sub_tax, i+1] == paste0(j, 'X'))
+      ind_X <- which(agg[ind_sub_tax, i+1] == leftov)
       
       if(length(ind_X)){
         
@@ -61,7 +72,13 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
         for(k in ind_sub_tax[-ind_X]){
           for(l in col_sel){
             if(agg[k,l] < sum(agg[,l])*thresh){
-              agg[ind_X,l] <- agg[ind_X,l] + agg[k,l]
+              # if there is more then one left over (Eukaryote_X => kata, crypto...)
+              if(length(ind_X) == 1){
+                agg[ind_X,l] <- agg[ind_X,l] + agg[k,l]
+              } else {
+                true_ind_X <- which(agg[,i+2] == paste0(leftov, 'X'))
+                agg[true_ind_X,l] <- agg[true_ind_X,l] + agg[k,l]
+              }
               agg[k,l] <- 0
             }
           }
@@ -72,7 +89,6 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
         
       } else { 
         # create the leftover
-        leftov <- ifelse(grepl('_X',j), paste0(j, 'X'), paste0(j, '_X'))
         if(mct-i > 1){
           for(k in (i+2):mct){
             leftov <- c(leftov, paste0(rev(leftov)[1], 'X'))
@@ -142,7 +158,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   if(show){
     
     # layout
-    lcs <- length(selec_smp)
+    lcs <- length(sel_smp)
     if(is.null(mat_lay)){
       mat_lay <- matrix(c(1:lcs, rep(lcs+1,lcs)), ncol=2)  
     }
