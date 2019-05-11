@@ -3,7 +3,7 @@
 #####
 
 
-legend_pie_taxo <- function(pie_taxo, x, y, x_range=1, box=F, cex=1){
+legend_pie_taxo <- function(pie_taxo, x, y, x_range=1, box=F, cex=1, last_tax_text=T){
   
   agg <- pie_taxo$agg
   lst_pal <- pie_taxo$lst_pal
@@ -14,7 +14,7 @@ legend_pie_taxo <- function(pie_taxo, x, y, x_range=1, box=F, cex=1){
   lct <- length(col_tax)-1
   
   # legend and pal
-  leg <- agg[col_tax[-c(1,mct)]]
+  leg <- agg[col_tax[-c(1,ifelse(last_tax_text, mct, 0))]]
   
   pal <- as.matrix(leg)
   for(i in 1:nrow(pal)){
@@ -47,11 +47,16 @@ legend_pie_taxo <- function(pie_taxo, x, y, x_range=1, box=F, cex=1){
   
   # xs
   xr05 <- 0.5*x_range
-  xs <- x+seq(-xr05, xr05, length.out=ncol(leg))
+  
+  xs <- rev(rev(x+seq(-xr05, xr05, length.out=ncol(leg)+1))[-1])
   
   # leg
   for(i in seq_along(leg)){
-    legend(xs[i], y, leg[,i], xjust=0.5, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
+    l <- leg[,i]
+    if(last_tax_text == F & i == ncol(leg)){
+      l <- paste0('(', 1:nrow(leg), ') ', l)
+    }
+    legend(xs[i], y, l, xjust=0, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
            title=names(leg)[i], cex=cex)
   }
 }

@@ -5,7 +5,7 @@
 
 pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr)), selec_otu=NULL,
                      thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL, hei_lay=NULL,
-                     box=F, show=T){
+                     box=F, show=T, last_tax_text=T){
   
   ### prepare taxo ----
   taxon <- droplevels(taxo)
@@ -104,6 +104,11 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     agg <- droplevels(agg)
   }
   
+  ind_undet <- unique(which(agg == 'undetermined', arr.ind=T)[,1])
+  if(length(ind_undet)){
+    agg <- rbind.data.frame(agg[-ind_undet,], agg[ind_undet,])
+  }
+  
   
   #
   
@@ -157,52 +162,71 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
         box('plot')
         box('figure',2)
       }
-      
-      # pie rayon
-      ray <- (1-max(strwidth(agg[[mct]]))*cex*2)/2-adj
-      r <- ray
-      shift <- ray/lct
-      
-      for(j in rev(col_tax[-1])){ # for each tax lev except the first
-        # get the sum of each taxon
-        tax <- unique(agg[,j])
-        pie <- NULL
-        for(k in tax){
-          pie <- c(pie, sum(agg[agg[,j] == k,i]))
-        }
-        names(pie) <- tax
-        pal <- lst_pal[[j-1]]
-  
-        # pie
-        floating.pie(0.5,0.5, pie, radius=r, col=lst_pal[[j-1]][pie != 0], border=NA)
-        r <- r-shift
-        if(j != 2){
-          draw.circle(0.5,0.5,r+shift/5, col='white', border=NA)
+
+      if(sum(agg[,i]) != 0){      
+        # pie rayon
+        if(last_tax_text){
+          ray <- (1-max(strwidth(agg[[mct]]))*cex*2)/2-adj
+        } else {
+          ray <- 0.5
         }
         
-      }
-      
-      # rad line 1st tax lev
-      cs <- cumsum(pie/sum(pie))*2*pi
-      for(j in cs){draw.radial.line(0, ray, c(0.5,0.5), angle=j, lwd=0.5)}
-      
-      # last taxa
-      p <- agg[[i]]/sum(agg[[i]])
-      rad <- p*2*pi
-      cs <- cumsum(rad)
-      names(cs) <- agg[[mct]]
-      for(j in seq_along(cs)){
-        if(rad[j] != 0){
-          ang <- cs[j]-rad[j]/2
-          radialtext(names(cs)[j], c(0.5,0.5), start=ray+0.01, angle=ang, cex=cex)
-          radialtext(paste(round(p[j]*100, digit=1), '%'), c(0.5,0.5), middle=ray-ray/lct+shift/5*3, angle=ang, cex=cex*0.5)
+        r <- ray
+        shift <- ray/lct
+        
+        for(j in rev(col_tax[-1])){ # for each tax lev except the first
+          # get the sum of each taxon
+          tax <- unique(agg[,j])
+          pie <- NULL
+          for(k in tax){
+            pie <- c(pie, sum(agg[agg[,j] == k,i]))
+          }
+          names(pie) <- tax
+          pal <- lst_pal[[j-1]]
+    
+          # pie
+          floating.pie(0.5,0.5, pie, radius=r, col=lst_pal[[j-1]][pie != 0], border=NA)
+          r <- r-shift
+          if(j != 2){
+            draw.circle(0.5,0.5,r+shift/5, col='white', border=NA)
+          }
         }
+        
+        # rad line 1st tax lev
+        cs <- cumsum(pie/sum(pie))*2*pi
+        for(j in cs){draw.radial.line(0, ray, c(0.5,0.5), angle=j, lwd=0.5)}
+        
+        # last taxa
+        p <- agg[[i]]/sum(agg[[i]])
+        rad <- p*2*pi
+        
+        cs <- cumsum(rad)
+        if(last_tax_text){
+          names(cs) <- agg[[mct]]
+        } else {
+          names(cs) <- seq_along(agg[[mct]])
+        }
+        
+        for(j in seq_along(cs)){
+          if(rad[j] != 0){
+            ang <- cs[j]-rad[j]/2
+            if(last_tax_text){
+              radialtext(names(cs)[j], c(0.5,0.5), start=ray+0.01, angle=ang, cex=cex)
+              radialtext(paste0(round(p[j]*100, digit=1), '%'), c(0.5,0.5), middle=ray-ray/lct+shift/5*3, angle=ang, cex=cex*0.5)
+            } else {
+              radialtext(paste0('(', names(cs)[j], ') ', round(p[j]*100, digit=1), '%'),
+                         c(0.5,0.5), middle=ray-ray/lct+shift/5*3, angle=ang, cex=cex*0.5)
+            }
+          }
+        }
+      } else {
+        text(0.5,0.5,'sum pie == 0')
       }
       
     }
     
     # legend and pal
-    leg <- agg[col_tax[-c(1,mct)]]
+    leg <- agg[col_tax[-c(1,ifelse(last_tax_text, mct, 0))]]
     
     pal <- as.matrix(leg)
     for(i in 1:nrow(pal)){
@@ -234,14 +258,18 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     }
     
     # x  coord
-    xs <- rev(rev(seq(0,1,length.out=ncol(leg)+2)[-1])[-1])
+    xs <- rev(rev(seq(0,1,length.out=ncol(leg)+1))[-1])
       
     # leg
     par(mar=rep(0,4))
     plot.new()
     
     for(i in seq_along(leg)){
-      legend(xs[i], 0.5, leg[,i], xjust=0.5, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
+      l <- leg[,i]
+      if(last_tax_text == F & i == ncol(leg)){
+        l <- paste0('(', 1:nrow(leg), ') ', l)
+      }
+      legend(xs[i], 0.5, l, xjust=0, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
              title=names(leg)[i])
     }
   }
