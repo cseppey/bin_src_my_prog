@@ -19,6 +19,8 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     for(i in levels(selec_smp)){
       sel_smp[[i]] <- which(selec_smp == i)
     }
+  } else {
+    sel_smp <- selec_smp
   }
   
   # aggregate mr according to the samples groups and taxa
