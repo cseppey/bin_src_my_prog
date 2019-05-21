@@ -8,7 +8,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
                      box=F, show=T, last_tax_text=T){
   
   ### prepare taxo ----
-  taxon <- droplevels(taxo)
+  taxon <- droplevels(taxo[,tax_lev])
   if(length(levels(taxon[,1])) != 1){
     taxon <- cbind.data.frame(life=factor(rep('life', nrow(taxon))), taxon)
   }
@@ -45,7 +45,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   css <- matrix(css, ncol=length(sel_smp))
   dimnames(css) <- list(names(mr), names(sel_smp))
   
-  agg <- aggregate(css, as.list(taxon[tax_lev]), sum)
+  agg <- aggregate(css, as.list(taxon), sum)
 
   # compress small taxon
   col_tax <- which(sapply(agg, is.factor))
