@@ -102,7 +102,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
         # supress small taxa
         for(k in ind_sub_tax){
           for(l in col_sel){
-            if(agg[k,l] < sum(agg[,l])*thresh){
+            if(agg[k,l] < sum(agg[,l], leftov[1,l])*thresh){
               leftov[1,l] <- leftov[1,l] + agg[k,l]
               agg[k,l] <- 0
             }
