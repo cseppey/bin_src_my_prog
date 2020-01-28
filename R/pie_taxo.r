@@ -5,7 +5,7 @@
 
 pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr)), selec_otu=NULL,
                      thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL, hei_lay=NULL,
-                     box=F, show=T, last_tax_text=T){
+                     box=F, show=T, info_perc=T, rshift=0, last_tax_text=T){
   
   ### prepare taxo ----
   taxon <- droplevels(taxo[,tax_lev])
@@ -15,7 +15,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   
   # perpare selec_smp
   if(is.factor(selec_smp)){
-    sel_smp <- NULL
+    sel_smp <- list()
     for(i in levels(selec_smp)){
       sel_smp[[i]] <- which(selec_smp == i)
     }
@@ -170,7 +170,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     
     layout(mat_lay, width=wdt_lay, height=hei_lay, respect=T)
     
-    par(mar=c(0.5,1,2,0.5), oma=c(1,0,1,0), xaxs='i', yaxs='i')
+    par(mar=c(0.5,2,2,0.5), oma=c(1,0,1,0), xaxs='i', yaxs='i')
     for(i in col_sel){ # for each sample selection
       
       # plot
@@ -226,14 +226,15 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
         }
         
         for(j in seq_along(cs)){
+          perc <- ifelse(info_perc, paste0(' ', round(p[j]*100, digit=1), '%'), '')
           if(rad[j] != 0){
             ang <- cs[j]-rad[j]/2
             if(last_tax_text){
               radialtext(names(cs)[j], c(0.5,0.5), start=ray+0.01, angle=ang, cex=cex)
-              radialtext(paste0(round(p[j]*100, digit=1), '%'), c(0.5,0.5), middle=ray-ray/lct+shift/5*3, angle=ang, cex=cex*0.5)
+              radialtext(perc, c(0.5,0.5), middle=ray-shift/5*2+rshift, angle=ang, cex=cex*0.5)
             } else {
-              radialtext(paste0('(', names(cs)[j], ') ', round(p[j]*100, digit=1), '%'),
-                         c(0.5,0.5), middle=ray-ray/lct+shift/5*3, angle=ang, cex=cex*0.5)
+              radialtext(paste0('(', names(cs)[j], ')', perc),
+                         c(0.5,0.5), middle=ray-shift/5*2+rshift, angle=ang, cex=cex*0.5)
             }
           }
         }
