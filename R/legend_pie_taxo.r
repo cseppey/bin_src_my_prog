@@ -3,7 +3,7 @@
 #####
 
 
-legend_pie_taxo <- function(pie_taxo, x, y, x_range=1, box=F, cex=1, last_tax_text=T){
+legend_pie_taxo <- function(pie_taxo, x, y, x_range=1, box=F, cex=1, last_tax_text=T, pal_1_lev=2){
   
   agg <- pie_taxo$agg
   lst_pal <- pie_taxo$lst_pal
@@ -14,7 +14,7 @@ legend_pie_taxo <- function(pie_taxo, x, y, x_range=1, box=F, cex=1, last_tax_te
   lct <- length(col_tax)-1
   
   # legend and pal
-  leg <- agg[col_tax[-c(1,ifelse(last_tax_text, mct, 0))]]
+  leg <- agg[col_tax[-c(1:(pal_1_lev-1),ifelse(last_tax_text, mct, 0))]]
   
   pal <- as.matrix(leg)
   for(i in 1:nrow(pal)){

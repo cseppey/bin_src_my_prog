@@ -3,7 +3,8 @@
 #####
 
 
-pie_taxo_single <- function(pie_taxo, sel_smp, x, y, ray=NULL, cex=0.5, adj=0, last_tax_text=T, info_tax=T, info_perc=T){
+pie_taxo_single <- function(pie_taxo, sel_smp, x, y, ray=NULL, cex=0.5, adj=0, last_tax_text=T,
+                            info_tax=T, info_perc=T, rshift=0){
   
   agg <- pie_taxo$agg
   lst_pal <- pie_taxo$lst_pal
@@ -78,7 +79,7 @@ pie_taxo_single <- function(pie_taxo, sel_smp, x, y, ray=NULL, cex=0.5, adj=0, l
           if(info_tax | info_perc){
             radialtext(paste(ifelse(info_tax, paste0('(', names(cs)[j], ')'), ''),
                              ifelse(info_perc, paste0(round(p[j]*100, digit=1), '%'), '')),
-                       c(x, y), middle=ray-ray/lct+shift/5*lct, angle=ang, cex=cex*0.5)
+                       c(x, y), middle=ray-ray/lct+shift/5*lct+rshift, angle=ang, cex=cex*0.5)
             }
         }
       }
