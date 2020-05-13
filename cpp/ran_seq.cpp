@@ -74,7 +74,7 @@ int main( int argc, char * argv[] ) {
 
   else {
 
-    vector<pair<string, string>> vecSeq;
+    vector<pair<string, string> > vecSeq;
 
     while ( getline( inPathFH, ligne )) {
       if ( ligne.at(0) == '>' ) {
