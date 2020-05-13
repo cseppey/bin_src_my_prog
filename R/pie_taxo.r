@@ -5,13 +5,24 @@
 
 pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr)), selec_otu=NULL,
                      thresh=0.01, cex=0.5, adj=0, mat_lay=NULL, wdt_lay=NULL, hei_lay=NULL,
-                     box=F, show=T, info_perc=T, rshift=0, last_tax_text=T){
+                     box=F, show=T, info_perc=T, rshift=0, last_tax_text=T, root=NULL, pal_1_lev=2,
+                     pal_ini=rainbow, add_pal=NULL){
   
   ### prepare taxo ----
-  taxon <- droplevels(taxo[,tax_lev])
+  taxon <- data.frame(droplevels(taxo[,tax_lev]))
   if(length(levels(taxon[,1])) != 1){
-    taxon <- cbind.data.frame(life=factor(rep('life', nrow(taxon))), taxon)
+    t <- data.frame(taxon)
+    if(ncol(t) == 1){
+      names(t) <- names(taxo[,tax_lev])
+    }
+  } else {
+    t <- data.frame(taxon[,-1])
+    if(ncol(t) == 1){
+      names(t) <- names(taxo[,tax_lev])
+    }
   }
+  
+  taxon <- cbind.data.frame(rare_taxa=factor(rep(paste0('rare_', names(t)[1]), nrow(t))), t)
   
   # perpare selec_smp
   if(is.factor(selec_smp)){
@@ -27,7 +38,7 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   if(is.null(selec_otu)){
     css <- sapply(seq_along(sel_smp), function(x) {
       if(ncol(mr) > 1){
-        colSums(mr[sel_smp[[x]],])
+        colSums(as.data.frame(mr)[sel_smp[[x]],])
       } else {
         sum(mr[sel_smp[[x]],])
       }
@@ -122,25 +133,50 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
     agg <- droplevels(agg)
   }
   
+  # bring the root at the bottom
+  ind_root <- unique(unlist(sapply(agg[,col_tax], function(x) which(grepl(paste0(root, '_*X*'), x) & grepl(paste0(root, '[a-z]'), x) == F))))
+  if(is.null(root) == F & length(ind_root)){
+    agg <- rbind.data.frame(agg[-ind_root,], agg[ind_root,])
+  }
+  
+  # bring rare at the bottom
+  ind_rare <- which(grepl('rare_', agg[,col_tax[lct]]))
+  if(length(ind_rare)){
+    agg <- rbind.data.frame(agg[-ind_rare,], agg[ind_rare,])
+  }
+  
+  # bring undetermined at the bottom
   ind_undet <- unique(which(agg == 'undetermined', arr.ind=T)[,1])
   if(length(ind_undet)){
     agg <- rbind.data.frame(agg[-ind_undet,], agg[ind_undet,])
   }
   
+  # change the leading X by "other"
+  agg[,col_tax] <- as.data.frame(lapply(agg[,col_tax], function(x){
+    x1 <- sapply(x, function(y){
+      z <- as.character(y)
+      if(grepl('_X', z)){
+        z <- sub('_X+', '', z)
+        z <- sub('^', 'other ', z)
+      }
+      return(z)
+    })
+    return(as.factor(x1))
+  }))
   
   #
   
   ### prepare palette ----
   # pal second level
   lst_pal <- NULL
-  uni_2 <- unique(agg[,2])
-  lst_pal[[names(agg)[2]]] <- rainbow(length(uni_2))
+  uni_2 <- unique(agg[,pal_1_lev])
+  lst_pal[[names(agg)[pal_1_lev]]] <- c(pal_ini(length(uni_2)-length(add_pal)), add_pal)
   lst_pal <- as.list(lst_pal)
   names(lst_pal[[1]]) <- uni_2
   
   # pal inferior levels
-  for(i in col_tax[-c(1:2)]){
-    pal_sup <- lst_pal[[i-2]]
+  for(i in col_tax[-c(1:pal_1_lev)]){
+    pal_sup <- lst_pal[[i-pal_1_lev]]
     for(j in seq_along(pal_sup)){
       j2 <- pal_sup[j]
       if(is.null(names(j2))){
@@ -160,6 +196,8 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
   if(show){
     
     # layout
+    op <- par(no.readonly=T)
+    
     lcs <- length(sel_smp)
     if(is.null(mat_lay)){
       mat_lay <- matrix(c(1:lcs, rep(lcs+1,lcs)), ncol=2)  
@@ -276,6 +314,13 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
       pal <- pal[apply(is.na(pal), 1, function(x) all(x) == F),]
     }
     
+    # leg <- as.data.frame(gsub('_X+', '', sapply(leg, function(x) {
+    #   y <- as.character(x)
+    #   Xs <- grep('_X*', y)
+    #   y[Xs] <- gsub('^', 'OTH_', y[Xs])
+    #   return(y)
+    # })))
+    
     # x  coord
     xs <- rev(rev(seq(0,1,length.out=ncol(leg)+1))[-1])
       
@@ -291,6 +336,9 @@ pie_taxo <- function(mr, taxo, tax_lev=seq_along(taxo), selec_smp=list(1:nrow(mr
       legend(xs[i], 0.5, l, xjust=0, yjust=0.5, pch=15, col=as.character(pal[,i]), bty='n',
              title=names(leg)[i])
     }
+    
+    par(op)
+    
   }
   ###
   
