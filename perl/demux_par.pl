@@ -140,7 +140,7 @@ sub thread_fct {
 
 my @args = @ARGV;
 
-my @threads = ();
+#my @threads = ();
 
 for my $arg (@args){
   push (@threads, threads->create (\&thread_func, $arg));

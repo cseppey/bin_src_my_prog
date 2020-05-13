@@ -4,6 +4,14 @@
 use strict;
 use warnings;
 
+# $ARGV[0] : input file (fastq or fastq)
+# $ARGV[1] : output file
+# $ARGV[2] : scrap file (sequences where the primers aren't found)
+# $ARGV[3] : forward primer
+# $ARGV[4] : reverse primer
+
+
+
 
 open (my $FH_IN, "<$ARGV[0]");
 
