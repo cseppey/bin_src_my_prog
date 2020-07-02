@@ -6,6 +6,9 @@ use warnings;
 use threads;
 
 
+# ARGV[0] = input fastq to demultiplex
+# ARGV[1] = sample tag correspondence file: 1st col: demux smp name, 2nd col: forward tag with primer 5' 3', 3rd col: reverse primer 3' 5' (with tag if doubled tag)
+# ARGV[2] = output directory
 
 open (my $FH_primer, "<$ARGV[1]");
 my @primers = <$FH_primer>;
@@ -13,6 +16,10 @@ close $FH_primer;
 
 #---
 # prep tags
+
+unless (-e $ARGV[2] ) {
+  mkdir $ARGV[2]
+}
 
 my %H_primers = ();
 my $reg_check_seq;
@@ -45,8 +52,6 @@ for my $primer (@primers) {
   my $path_file = $ARGV[2] . '/' . $parts_ligne[0];
   if (-e $path_file) {
     unlink $path_file;
-  } else {
-    mkdir $ARGV[2]
   }
 
   $ind_primer++;

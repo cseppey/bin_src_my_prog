@@ -24,8 +24,8 @@ then
     latex $prefix.tex
     latex $prefix.tex
     dvips $prefix.dvi -o $prefix.ps
-    #ps2pdf -dAutoRotatePages=/None $prefix.ps
-    ps2pdf $prefix.ps
+    ps2pdf -dAutoRotatePages=/None $prefix.ps
+    #ps2pdf $prefix.ps
     evince $prefix.pdf
   elif [ "$2" == 'bibps' ]
   then
@@ -40,8 +40,8 @@ then
   then
     latex $prefix.tex
     dvips $prefix.dvi -o $prefix.ps
-    #ps2pdf -dAutoRotatePages=/None $prefix.ps
-    ps2pdf $prefix.ps
+    ps2pdf -dAutoRotatePages=/None $prefix.ps
+    #ps2pdf $prefix.ps
     evince $prefix.pdf
   elif [ "$2" == 'ps' ]
   then
