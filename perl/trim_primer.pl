@@ -73,7 +73,7 @@ elsif ($ARGV[0] =~ /q$/) {
     # sequence
     if ($ind_ligne % 4 == 1) {
 
-      if ($ligne =~ /^($primer_fwd)(.*)($primer_rev)$/) {
+      if ($ligne =~ /^.*($primer_fwd)(.*)($primer_rev).*$/) {
         $seqok = 1;
         $seqRev = 0;
         $seq = $2;
@@ -81,7 +81,7 @@ elsif ($ARGV[0] =~ /q$/) {
         $ligne =~ /$primer_fwd/;
         $length_tag_primer1 = length($`) + length($&);
       }
-      elsif ($ligne =~ /^($primer_revR)(.*)($primer_fwdR)$/) {
+      elsif ($ligne =~ /^.*($primer_revR)(.*)($primer_fwdR).*$/) {
         $seqok = 1;
         $seqRev = 1;
         $seq = $2;
