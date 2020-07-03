@@ -126,9 +126,9 @@ sub thread_fct {
 
     $ind_ligne++;
 
-    if ($ind_ligne % 1000000 == 0) {
-      print "line $H_primers{$key} $ind_ligne\n";
-    }
+    #if ($ind_ligne % 1000000 == 0) {
+    #  print "line $H_primers{$key} $ind_ligne\n";
+    #}
 
   }
 
