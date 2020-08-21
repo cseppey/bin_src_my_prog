@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 
-#include <string.h>
+#include <string>
 #include <vector>
 #include <map>
 
@@ -18,20 +18,26 @@ int main( int argc, char * argv[] ) {
   
   // établissement des flux d'entre et sortie
    
-  string pathCorrespIn = argv[1],
-         pathSwmIn = argv[2],
-         pathSwmOut = argv[3];
+  string pathCorrespIn( argv[1] ),
+         pathSwmIn( argv[2] ),
+         pathSwmOut( argv[3] );
 
-  ifstream inCorrespFH( pathCorrespIn ),
-           inSwmFH( pathSwmIn );
-  ofstream outSwmFH( pathSwmOut );
+  ifstream inCorrespFH( pathCorrespIn.c_str() ),
+           inSwmFH( pathSwmIn.c_str() );
+  ofstream outSwmFH( pathSwmOut.c_str() );
 
   // parcourt du fichier de correspondance
   
+  int indLine = 0;
   string ligne;
   map<string, string> Mcorresp;
   
   while( getline( inCorrespFH, ligne ) ) {
+
+    //indLine++;
+    //if( indLine % 10000 == 0 ) {
+    //  cout << "crsp " << indLine << endl;
+    //}
 
     string partLigne,
            idSeqDerep;
@@ -54,8 +60,16 @@ int main( int argc, char * argv[] ) {
     string partLigne;
     istringstream iss( ligne );
     while( getline( iss, partLigne, ' ' ) ) {
-      outSwmFH << Mcorresp.find( '>' + partLigne )->second << ' ';
-      Mcorresp.erase( Mcorresp.find( '>' + partLigne ) );
+      
+      string partLigne2;
+      istringstream iss2( partLigne );
+
+      while( getline( iss2, partLigne2, ';' ) ) {
+	outSwmFH << Mcorresp.find( '>' + partLigne2 )->second << ' ';
+      	Mcorresp.erase( Mcorresp.find( '>' + partLigne2 ) );
+	break;
+      }
+      
     }
     outSwmFH << endl;
 

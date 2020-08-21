@@ -23,13 +23,13 @@ int main( int argc, char * argv[] ) {
  
   cout << "patates" << endl;
   
-  // établissement du flux pour l'ouverture des fichiers fastq
+  // établissement du flux pour l'ouverture des fichiers fasta
 
   string pathDosFaIn = argv[1],
          pathFaOut = argv[2];
 
-  int seuilNbRep = atoi( argv[3] ),
-      seuilNbPres = atoi( argv[4] );
+  int seuilNbEch = atoi( argv[3] ),
+      seuilNbOcc = atoi( argv[4] );
 
   DIR *DH( 0 );
   DH = opendir( pathDosFaIn.c_str() );
@@ -39,147 +39,147 @@ int main( int argc, char * argv[] ) {
 
   ofstream outPathFH( pathFaOut );
 
-  // liste d'échs
+
+  // établissement map éch
 
   set<string> Sechs;
+  map<string,int> MseqEch; // map<nomFa, cnt>
 
   while( nomFichier = readdir( DH ) ) {
     string pathFaIn( pathDosFaIn + "/" + nomFichier->d_name );
+
     if ( stat( pathFaIn.c_str(), &filestat )) continue;
     if ( S_ISDIR( filestat.st_mode )) continue;
-    string nomFa( nomFichier->d_name );
-    Sechs.insert( nomFa.c_str() );
+
+    string nomFa( nomFichier->d_name ),
+           idEch,
+	   ligne;
+
+    Sechs.insert( nomFa );
+
+    istringstream iss( nomFa );
+    while( getline( iss, ligne, '.' ) ) {
+      idEch = ligne;
+      break;
+    }
+    
+    MseqEch.insert( pair<string,int>( idEch, 0 ) );
   }
 
-  // parcourt du répertoire et recuperation des sequences
+
+  // parcourt du répertoire et décompte sÉquences pour chaque fa
   
-  map<string, map<string, int>> MseqEchs;   // map<seq, map<noEch, rep>>
+  cout << "parcourt" << endl;
+
+  map<string, pair< pair<int,int>, map<string,int> > > MseqTot;
+    // map<seq, pair< pair<nbEch,nbSeq>, map<idEch,cnt> >>
 
   for( set<string>::iterator it = Sechs.begin(); it != Sechs.end(); it++ ) {
-  
+    
     string pathFaIn( pathDosFaIn + "/" + *it );
 
     ifstream inPathFaFH( pathFaIn );
-    
-    string ligne,
-           noEch;
 
-    // calcul nb digit
+    string ligne,
+           idEch;
+
+    // récupération de l'identifiant d'ech
+    
     istringstream iss( *it );
     while( getline( iss, ligne, '.' ) ) {
-      noEch = ligne;
+      idEch = ligne;
       break;
     }
 
-    cout << noEch << endl;
+    cout << idEch << endl;
 
     // parcourt fasta
     
     while( getline( inPathFaFH, ligne ) ) {
 
-      if( ligne.at( 0 ) != '>' ) {
+      if( ! ligne.empty() ) {
 
-        // si première rencontre de la séquence
-        
-        if( MseqEchs.find( ligne ) == MseqEchs.end() ) {
+	if( ligne.at( 0 ) != '>' ) {
 
-          map<string, int> Mcomptes;
-          for( set<string>::iterator jt = Sechs.begin(); jt != Sechs.end(); jt++ ) {
-            string partLigne,
-                   noEch2;
-            istringstream iss( *jt );
-            while( getline( iss, partLigne, '.' ) ) {
-              noEch2 = partLigne;
-              break;
-            }
+      	  // si première rencontre de la séquence
+	  if( MseqTot.find( ligne ) == MseqTot.end() ) {
 
-            Mcomptes.insert( pair<string, int>( noEch2, 0 ) );
-          }
+	    // create the pair of counts and map of samples
+	    pair<int,int> p( 1, 1 );
+	    map<string,int> m = MseqEch;
+	    
+	    // increment m
+	    m[idEch]++;
 
-          Mcomptes[noEch]++;
+	    // create the pair of p and m
+	    pair< pair<int,int>, map<string,int> > P( p, m );
 
-          MseqEchs.insert( pair<string, map<string, int>>( ligne, Mcomptes ) );
-        }
+	    // increment the map of sequences
+	    MseqTot.insert( pair<string, pair< pair<int,int>, map<string,int> > > ( ligne, P ) );
 
-        // si sequence rencontre au paravent
+	  }
 
-        else {
-          MseqEchs[ligne][noEch]++;
-        }
+	  // if the sequence is already in the map of seq
+	  else {
 
+	    // retreive P, p and m
+	    pair< pair<int,int>, map<string,int> > P = MseqTot[ligne];
+	    pair<int,int> p = P.first;
+	    map<string,int> m = P.second;
+
+	    // increment the nb of smp in p if it is the first occurrence in the sample
+	    if( m[idEch] == 0 ) {
+	      p.first++;
+	    }
+
+	    // increment the sequence counts in p and m
+	    p.second++;
+	    m[idEch]++;
+
+	    // increment the MseqTot
+	    MseqTot[ligne] = pair< pair<int,int>, map<string,int> > ( p, m );
+
+	  }
+	      
+      	}
       }
-
     }
 
     inPathFaFH.close();
 
   }
-    
-  // somme pour chaque séquence derep
-  
-  multimap<int, pair<string, map<string, int>>> MMdecSeqEchs;   // multimap<sommeReps, pair<seq, map<noEch, rep>>>
-
-  for( map<string, map<string, int>>::iterator it = MseqEchs.begin(); it != MseqEchs.end(); it++ ) {
-    
-    int dec( 0 );
-    map<string, int> M( it->second );
-
-    for( map<string, int>::iterator jt = M.begin(); jt != M.end(); jt++ ) {
-      dec += jt->second;
-    }
-
-    pair<string, map<string, int>> p( it->first, it->second );
-    
-    MMdecSeqEchs.insert( pair<int, pair<string, map<string, int>>>( dec, p ) );
-
-  }
 
 
-  // écriture du fichier dereplique
+  // writing of the dereplicated fasta
 
-  int indSeqDerep( 1 );
+  cout << "dereplication" << endl;
 
-  for( multimap<int, pair<string, map<string, int>>>::reverse_iterator rit = MMdecSeqEchs.rbegin(); rit != MMdecSeqEchs.rend(); rit++ ) {
-    
-    // vérification de la reponse totale
+  int seqNb( 0 );
 
-    if( rit->first < seuilNbRep ) {
-      break;
-    }
-  
-    // récupération des réponse et nb de présence
+  for( map< string, pair< pair<int,int>, map<string,int> > >::iterator it = MseqTot.begin(); it != MseqTot.end(); it++ ) {
 
-    pair<string, map<string, int>> p( rit->second );    // pair<seq, map<noEch, rep>>
-    map<string, int> Mcomptes( p.second );
+    string seq = it->first;
+    pair<int,int> p = it->second.first;
+    map<string,int> m = it->second.second;
 
-    string reponse;
-    int presEch( 0 );
-
-    for( map<string, int>::iterator kt = Mcomptes.begin(); kt != Mcomptes.end(); kt++ ) {
+    // check if the sequence respect the threshold of smp nb and occurrence nb
+    if( p.first >= seuilNbEch && p.second >= seuilNbOcc ) {
       
-      string Srep = static_cast<ostringstream*>( &( ostringstream() << kt->second ) )->str();
-     
-      reponse += '-' + kt->first + '_' + Srep;
-      if( kt->second != 0 ) {
-        presEch++;
+      // write the sequence name
+      seqNb++;
+
+      outPathFH << '>' << seqNb << '_' << p.second;
+
+      for( map<string,int>::iterator jt = m.begin(); jt != m.end(); jt++ ) {
+	outPathFH << '-' << jt->first << '_' << jt->second;
       }
-    }
 
-    // écriture si assez de présence
+      // write the sequence
+      outPathFH << endl << seq << endl;
 
-    if( presEch >= seuilNbPres ) { 
-      outPathFH << '>' << indSeqDerep << '_' << rit->first << reponse << endl << p.first << endl;
-      indSeqDerep++;
-    }
-
-
-    if( indSeqDerep % 100000  == 0 ) {
-      cout << indSeqDerep << endl;
     }
   }
-
-
-
+    
   outPathFH.close();
 
   //

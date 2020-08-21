@@ -126,9 +126,9 @@ sub thread_fct {
 
     $ind_ligne++;
 
-    #if ($ind_ligne % 1000000 == 0) {
-    #  print "line $H_primers{$key} $ind_ligne\n";
-    #}
+    if ($ind_ligne % 1000000 == 0) {
+      print "line $H_primers{$key} $ind_ligne\n";
+    }
 
   }
 
@@ -143,24 +143,24 @@ sub thread_fct {
 
 
 
-my @args = @ARGV;
-
-#my @threads = ();
-
-for my $arg (@args){
-  push (@threads, threads->create (\&thread_func, $arg));
-}
-
-foreach (@threads) {
-  $_->join(); # blocks until this thread exits
-}
-exit(0);
-
-# this is the main sub where all the threads start
-sub thread_func {
-  my $arg = shift;
-  print $arg;
-}
+#my @args = @ARGV;
+#
+##my @threads = ();
+#
+#for my $arg (@args){
+#  push (@threads, threads->create (\&thread_func, $arg));
+#}
+#
+#foreach (@threads) {
+#  $_->join(); # blocks until this thread exits
+#}
+#exit(0);
+#
+## this is the main sub where all the threads start
+#sub thread_func {
+#  my $arg = shift;
+#  print $arg;
+#}
    
    
    
